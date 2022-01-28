@@ -71,17 +71,15 @@ public class AllureReportServlet extends HttpServlet {
     }
 
     private void setResponseHeaders(HttpServletResponse response, String fileUrl) throws IOException {
-
         try {
             response.setStatus(HttpServletResponse.SC_OK);
-            final URI file = new URL(fileUrl).toURI();
-            final String mimeType = ofNullable(getServletContext().getMimeType(fileUrl)).orElse(
-                    Files.probeContentType(Paths.get(file.getPath()))
-            );
+            final URI fileUri = new URL(fileUrl).toURI();
+            final String mimeType =
+                    ofNullable(getServletContext().getMimeType(fileUrl))
+                            .orElse(Files.probeContentType(Paths.get(fileUri)));
             final String charsetPostfix = of("application", "text").anyMatch(mimeType::contains) ? ";charset=utf-8" : "";
             response.setHeader("Content-Type", mimeType + charsetPostfix);
-            response.setHeader("Content-Disposition", "inline; filename=\"" + Paths.get(file.getPath()).getFileName().toString() + "\"");
-
+            response.setHeader("Content-Disposition", "inline; filename=\"" + Paths.get(fileUri).getFileName().toString() + "\"");
         } catch (URISyntaxException e) {
             // should never happen
             throw new RuntimeException(e);

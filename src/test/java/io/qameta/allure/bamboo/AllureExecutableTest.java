@@ -11,7 +11,7 @@ import java.nio.file.Paths;
 
 import static com.google.common.io.Files.createTempDir;
 import static java.util.Collections.singleton;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.junit.MockitoJUnit.rule;

@@ -1,11 +1,11 @@
 package io.qameta.allure.bamboo;
 
 import com.atlassian.bamboo.build.BuildDefinition;
-import com.atlassian.bamboo.chains.Chain;
 import com.atlassian.bamboo.chains.ChainExecution;
 import com.atlassian.bamboo.chains.ChainResultsSummary;
 import com.atlassian.bamboo.chains.plugins.PostChainAction;
 import com.atlassian.bamboo.configuration.AdministrationConfiguration;
+import com.atlassian.bamboo.plan.cache.ImmutableChain;
 import com.atlassian.bamboo.resultsummary.ResultsSummary;
 import com.atlassian.bamboo.resultsummary.ResultsSummaryManager;
 import com.atlassian.bamboo.v2.build.BaseConfigurablePlugin;
@@ -67,7 +67,7 @@ public class AllureBuildCompleteAction extends BaseConfigurablePlugin implements
     }
 
     @Override
-    public void execute(@NotNull Chain chain, @NotNull ChainResultsSummary chainResultsSummary, @NotNull ChainExecution chainExecution) throws Exception {
+    public void execute(@NotNull ImmutableChain chain, @NotNull ChainResultsSummary chainResultsSummary, @NotNull ChainExecution chainExecution) throws InterruptedException, Exception {
         final BuildDefinition buildDef = chain.getBuildDefinition();
         final AllureGlobalConfig globalConfig = settingsManager.getSettings();
         final AllureBuildConfig buildConfig = AllureBuildConfig.fromContext(buildDef.getCustomConfiguration());
@@ -116,7 +116,7 @@ public class AllureBuildCompleteAction extends BaseConfigurablePlugin implements
         }
     }
 
-    private void prepareResults(List<File> artifactsTempDirs, Chain chain, ChainExecution chainExecution) throws IOException, InterruptedException {
+    private void prepareResults(List<File> artifactsTempDirs, ImmutableChain chain, ChainExecution chainExecution) throws IOException, InterruptedException {
         copyHistory(artifactsTempDirs, chain.getPlanKey().getKey(), chainExecution.getPlanResultKey().getBuildNumber());
         addExecutorInfo(artifactsTempDirs, chain, chainExecution.getPlanResultKey().getBuildNumber());
     }
@@ -190,7 +190,7 @@ public class AllureBuildCompleteAction extends BaseConfigurablePlugin implements
                 getBambooBaseUrl(), planKey, buildId, fileName);
     }
 
-    private void addExecutorInfo(List<File> artifactsTempDirs, Chain chain, int buildNumber) throws IOException, InterruptedException {
+    private void addExecutorInfo(List<File> artifactsTempDirs, ImmutableChain chain, int buildNumber) throws IOException, InterruptedException {
         final String rootUrl = getBambooBaseUrl();
         final String buildName = chain.getBuildName();
         final String buildUrl = String.format("%s/browse/%s-%s", rootUrl, chain.getPlanKey().getKey(), buildNumber);
@@ -210,4 +210,5 @@ public class AllureBuildCompleteAction extends BaseConfigurablePlugin implements
         }
         return "";
     }
+
 }

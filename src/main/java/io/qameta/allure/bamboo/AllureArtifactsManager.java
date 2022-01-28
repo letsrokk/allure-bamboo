@@ -1,5 +1,6 @@
 package io.qameta.allure.bamboo;
 
+import com.atlassian.bamboo.archive.ArchiverType;
 import com.atlassian.bamboo.artifact.MutableArtifact;
 import com.atlassian.bamboo.artifact.MutableArtifactImpl;
 import com.atlassian.bamboo.build.BuildDefinition;
@@ -19,16 +20,16 @@ import com.atlassian.bamboo.build.artifact.FileSystemArtifactLinkDataProvider;
 import com.atlassian.bamboo.build.artifact.TrampolineArtifactFileData;
 import com.atlassian.bamboo.build.artifact.TrampolineUrlArtifactLinkDataProvider;
 import com.atlassian.bamboo.build.artifact.handlers.ArtifactHandlersService;
-import com.atlassian.bamboo.chains.Chain;
 import com.atlassian.bamboo.chains.ChainResultsSummary;
 import com.atlassian.bamboo.chains.ChainStageResult;
 import com.atlassian.bamboo.plan.PlanResultKey;
 import com.atlassian.bamboo.plan.artifact.ArtifactDefinitionContextImpl;
+import com.atlassian.bamboo.plan.cache.ImmutableChain;
 import com.atlassian.bamboo.plugin.BambooPluginUtils;
-import com.atlassian.bamboo.plugin.descriptor.predicate.ConjunctionModuleDescriptorPredicate;
 import com.atlassian.bamboo.resultsummary.BuildResultsSummary;
 import com.atlassian.bamboo.resultsummary.ResultsSummaryManager;
 import com.atlassian.bamboo.security.SecureToken;
+import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.predicate.EnabledModulePredicate;
 import com.atlassian.plugin.predicate.ModuleOfClassPredicate;
@@ -36,6 +37,8 @@ import com.atlassian.sal.api.ApplicationProperties;
 import com.atlassian.sal.api.UrlMode;
 import com.google.common.collect.ImmutableList;
 
+import net.lingala.zip4j.core.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
 import org.apache.tools.ant.types.FileSet;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -48,6 +51,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -182,11 +186,55 @@ public class AllureArtifactsManager {
                         } else {
                             downloadAllArtifactsTo(dataProvider, stageDir, "");
                         }
+                        if (artifact.getArchiverType() == ArchiverType.ZIP) {
+                            Arrays.stream(requireNonNull(stageDir.listFiles()))
+                                    .filter(zipFile -> zipFile.getName().equalsIgnoreCase(String.format("%s.zip", artifact.getLabel())))
+                                    .findAny()
+                                    .ifPresent(artifactZip -> unzipArtifact(artifactZip, stageDir));
+                        }
                     }
                 }
             }
         }
         return resultsPaths;
+    }
+
+    /**
+     * Unzip packaged in ZIP archive artifacts to results directory
+     *
+     * @param artifactZip artifact ZIP file
+     * @param targetDir target directory
+     */
+    private void unzipArtifact(File artifactZip, File targetDir) {
+        try {
+            new ZipFile(artifactZip).extractAll(targetDir.getPath());
+            Arrays.stream(requireNonNull(targetDir.listFiles())).forEach(resultFileOrDirectory -> {
+                relocateUnzippedResults(resultFileOrDirectory, targetDir);
+            });
+        } catch (ZipException e) {
+            LOGGER.error("Unable to unpack artifact {}: {}", artifactZip.getName(), e.getMessage());
+        } finally {
+            deleteQuietly(artifactZip);
+        }
+    }
+
+    /**
+     * Relocate result files to results directory
+     *
+     * @param resultFileOrDirectory file or directory for relocation
+     * @param targetDir target direcotry
+     */
+    private void relocateUnzippedResults(final File resultFileOrDirectory, final File targetDir) {
+        if (resultFileOrDirectory.isDirectory()) {
+            Arrays.stream(requireNonNull(resultFileOrDirectory.listFiles())).forEach(listedFileOrDirectory -> relocateUnzippedResults(listedFileOrDirectory, targetDir));
+        } else {
+            Path target = Paths.get(targetDir.getPath(), resultFileOrDirectory.getName());
+            try {
+                Files.move(resultFileOrDirectory.toPath(), target);
+            } catch (IOException e) {
+                LOGGER.error("Unable to relocate file {} to {}: {}", resultFileOrDirectory.toPath(), target, e.getMessage());
+            }
+        }
     }
 
     /**
@@ -197,7 +245,7 @@ public class AllureArtifactsManager {
      * @param reportDir directory of a report
      * @return empty if not applicable, result otherwise
      */
-    Optional<AllureBuildResult> uploadReportArtifacts(@NotNull Chain chain, @NotNull ChainResultsSummary summary, File reportDir) {
+    Optional<AllureBuildResult> uploadReportArtifacts(@NotNull ImmutableChain chain, @NotNull ChainResultsSummary summary, File reportDir) {
         try {
             final ArtifactDefinitionContextImpl artifact = getAllureArtifactDef();
             artifact.setLocation("");
@@ -359,11 +407,8 @@ public class AllureArtifactsManager {
     }
 
     private List<ArtifactHandler> getArtifactHandlers() {
-        final ConjunctionModuleDescriptorPredicate<ArtifactHandler> predicate = new ConjunctionModuleDescriptorPredicate<>();
-
-        predicate.append(new ModuleOfClassPredicate<>(ArtifactHandler.class));
-        predicate.append(new EnabledModulePredicate<>());
-
+        final Predicate<ModuleDescriptor<ArtifactHandler>> predicate =
+                new ModuleOfClassPredicate<>(ArtifactHandler.class).and(new EnabledModulePredicate());
         return ImmutableList.copyOf(pluginAccessor.getModules(predicate));
     }
 
@@ -374,14 +419,12 @@ public class AllureArtifactsManager {
 
     @SuppressWarnings("unchecked")
     private <T extends ArtifactHandler> Optional<T> getArtifactHandlerByClassName(String className) {
-        final ConjunctionModuleDescriptorPredicate<T> predicate = new ConjunctionModuleDescriptorPredicate<>();
         return ofNullable(className).map(clazz -> {
             final Class<T> aClass;
             try {
                 aClass = (Class<T>) Class.forName(clazz);
-                predicate.append(new ModuleOfClassPredicate<>(aClass));
-                predicate.append(new EnabledModulePredicate<>());
-
+                Predicate<ModuleDescriptor<T>> predicate =
+                        new ModuleOfClassPredicate<>(aClass).and(new EnabledModulePredicate());
                 return pluginAccessor.getModules(predicate).stream().findAny().orElse(null);
             } catch (ClassNotFoundException e) {
                 LOGGER.error("Failed to find artifact handler for class name " + className, e);
