@@ -1,17 +1,16 @@
 package io.qameta.allure.bamboo;
 
-import com.atlassian.bamboo.plan.Plan;
 import com.atlassian.bamboo.plan.cache.ImmutablePlan;
 import com.atlassian.bamboo.plan.configuration.MiscellaneousPlanConfigurationPlugin;
+import com.atlassian.bamboo.plan.Plan;
 import com.atlassian.bamboo.utils.error.ErrorCollection;
 import com.atlassian.bamboo.v2.build.BaseConfigurablePlugin;
-import com.atlassian.bamboo.v2.build.configuration.MiscellaneousBuildConfigurationPlugin;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
- import static com.atlassian.bamboo.plan.PlanClassHelper.isChain;
+import static com.atlassian.bamboo.plan.PlanClassHelper.isChain;
 import static io.qameta.allure.bamboo.AllureConstants.ALLURE_CONFIG_ENABLED;
 import static io.qameta.allure.bamboo.AllureConstants.ALLURE_CONFIG_EXECUTABLE;
 import static io.qameta.allure.bamboo.AllureConstants.ALLURE_CONFIG_FAILED_ONLY;
@@ -31,11 +30,6 @@ public class AllureBuildConfigurator extends BaseConfigurablePlugin
 
     @Override
     public boolean isApplicableTo(@NotNull final ImmutablePlan plan) {
-        return isChain(plan);
-    }
-
-    @Override
-    public boolean isApplicableTo(@NotNull final Plan plan) {
         return isChain(plan);
     }
 

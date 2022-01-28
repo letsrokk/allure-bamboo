@@ -19,16 +19,16 @@ import com.atlassian.bamboo.build.artifact.FileSystemArtifactLinkDataProvider;
 import com.atlassian.bamboo.build.artifact.TrampolineArtifactFileData;
 import com.atlassian.bamboo.build.artifact.TrampolineUrlArtifactLinkDataProvider;
 import com.atlassian.bamboo.build.artifact.handlers.ArtifactHandlersService;
-import com.atlassian.bamboo.chains.Chain;
 import com.atlassian.bamboo.chains.ChainResultsSummary;
 import com.atlassian.bamboo.chains.ChainStageResult;
 import com.atlassian.bamboo.plan.PlanResultKey;
 import com.atlassian.bamboo.plan.artifact.ArtifactDefinitionContextImpl;
+import com.atlassian.bamboo.plan.cache.ImmutableChain;
 import com.atlassian.bamboo.plugin.BambooPluginUtils;
-import com.atlassian.bamboo.plugin.descriptor.predicate.ConjunctionModuleDescriptorPredicate;
 import com.atlassian.bamboo.resultsummary.BuildResultsSummary;
 import com.atlassian.bamboo.resultsummary.ResultsSummaryManager;
 import com.atlassian.bamboo.security.SecureToken;
+import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.predicate.EnabledModulePredicate;
 import com.atlassian.plugin.predicate.ModuleOfClassPredicate;
@@ -197,7 +197,7 @@ public class AllureArtifactsManager {
      * @param reportDir directory of a report
      * @return empty if not applicable, result otherwise
      */
-    Optional<AllureBuildResult> uploadReportArtifacts(@NotNull Chain chain, @NotNull ChainResultsSummary summary, File reportDir) {
+    Optional<AllureBuildResult> uploadReportArtifacts(@NotNull ImmutableChain chain, @NotNull ChainResultsSummary summary, File reportDir) {
         try {
             final ArtifactDefinitionContextImpl artifact = getAllureArtifactDef();
             artifact.setLocation("");
@@ -359,11 +359,8 @@ public class AllureArtifactsManager {
     }
 
     private List<ArtifactHandler> getArtifactHandlers() {
-        final ConjunctionModuleDescriptorPredicate<ArtifactHandler> predicate = new ConjunctionModuleDescriptorPredicate<>();
-
-        predicate.append(new ModuleOfClassPredicate<>(ArtifactHandler.class));
-        predicate.append(new EnabledModulePredicate<>());
-
+        final Predicate<ModuleDescriptor<ArtifactHandler>> predicate =
+                new ModuleOfClassPredicate<>(ArtifactHandler.class).and(new EnabledModulePredicate());
         return ImmutableList.copyOf(pluginAccessor.getModules(predicate));
     }
 
@@ -374,14 +371,12 @@ public class AllureArtifactsManager {
 
     @SuppressWarnings("unchecked")
     private <T extends ArtifactHandler> Optional<T> getArtifactHandlerByClassName(String className) {
-        final ConjunctionModuleDescriptorPredicate<T> predicate = new ConjunctionModuleDescriptorPredicate<>();
         return ofNullable(className).map(clazz -> {
             final Class<T> aClass;
             try {
                 aClass = (Class<T>) Class.forName(clazz);
-                predicate.append(new ModuleOfClassPredicate<>(aClass));
-                predicate.append(new EnabledModulePredicate<>());
-
+                Predicate<ModuleDescriptor<T>> predicate =
+                        new ModuleOfClassPredicate<>(aClass).and(new EnabledModulePredicate());
                 return pluginAccessor.getModules(predicate).stream().findAny().orElse(null);
             } catch (ClassNotFoundException e) {
                 LOGGER.error("Failed to find artifact handler for class name " + className, e);
