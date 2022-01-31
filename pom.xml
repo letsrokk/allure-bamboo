@@ -14,7 +14,7 @@
     </organization>
     <properties>
         <bamboo.version>8.1.2</bamboo.version>
-        <bamboo.data.version>8.1.2</bamboo.data.version>
+        <bamboo.data.version>${bamboo.version}</bamboo.data.version>
         <amps.version>8.1.2</amps.version>
         <plugin.testrunner.version>2.0.2</plugin.testrunner.version>
         <atlassian.spring.scanner.version>2.1.7</atlassian.spring.scanner.version>
@@ -53,6 +53,12 @@
             <groupId>com.atlassian.templaterenderer</groupId>
             <artifactId>atlassian-template-renderer-api</artifactId>
             <version>1.0.5</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.bamboo</groupId>
+            <artifactId>bamboo-specs-api</artifactId>
+            <version>${bamboo.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -188,6 +194,7 @@
             </snapshots>
             <releases>
                 <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
                 <checksumPolicy>warn</checksumPolicy>
             </releases>
         </repository>
@@ -203,6 +210,7 @@
             </snapshots>
             <releases>
                 <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
                 <checksumPolicy>warn</checksumPolicy>
             </releases>
         </pluginRepository>
