@@ -1,7 +1,6 @@
 package io.qameta.allure.bamboo;
 
 import com.atlassian.bamboo.build.BuildDefinition;
-import com.atlassian.bamboo.chains.Chain;
 import com.atlassian.bamboo.chains.ChainExecution;
 import com.atlassian.bamboo.chains.ChainResultsSummary;
 import com.atlassian.bamboo.chains.plugins.PostChainAction;
@@ -68,7 +67,7 @@ public class AllureBuildCompleteAction extends BaseConfigurablePlugin implements
     }
 
     @Override
-    public void execute(@NotNull Chain chain, @NotNull ChainResultsSummary chainResultsSummary, @NotNull ChainExecution chainExecution) throws InterruptedException, Exception {
+    public void execute(@NotNull ImmutableChain chain, @NotNull ChainResultsSummary chainResultsSummary, @NotNull ChainExecution chainExecution) throws InterruptedException, Exception {
         final BuildDefinition buildDef = chain.getBuildDefinition();
         final AllureGlobalConfig globalConfig = settingsManager.getSettings();
         final AllureBuildConfig buildConfig = AllureBuildConfig.fromContext(buildDef.getCustomConfiguration());
