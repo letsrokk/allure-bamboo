@@ -2,9 +2,9 @@ package io.qameta.allure.bamboo;
 
 import com.atlassian.bamboo.plan.cache.ImmutablePlan;
 import com.atlassian.bamboo.plan.configuration.MiscellaneousPlanConfigurationPlugin;
-import com.atlassian.bamboo.specs.api.builders.allure.AllureSettings;
+import com.atlassian.bamboo.specs.api.builders.allure.AllureSpecs;
 import com.atlassian.bamboo.specs.api.exceptions.PropertiesValidationException;
-import com.atlassian.bamboo.specs.api.model.allure.AllureSettingsProperties;
+import com.atlassian.bamboo.specs.api.model.allure.AllureSpecsProperties;
 import com.atlassian.bamboo.specs.api.validators.common.ValidationContext;
 import com.atlassian.bamboo.specs.yaml.BambooYamlParserUtils;
 import com.atlassian.bamboo.specs.yaml.MapNode;
@@ -38,7 +38,7 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 
 @SuppressWarnings("unchecked")
 public class AllureBuildConfigurator extends BaseConfigurablePlugin
-        implements MiscellaneousPlanConfigurationPlugin, ImportExportAwarePlugin<AllureSettings, AllureSettingsProperties> {
+        implements MiscellaneousPlanConfigurationPlugin, ImportExportAwarePlugin<AllureSpecs, AllureSpecsProperties> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AllureBuildConfigurator.class);
 
@@ -105,8 +105,8 @@ public class AllureBuildConfigurator extends BaseConfigurablePlugin
 
     @NotNull
     @Override
-    public AllureSettings toSpecsEntity(@NotNull HierarchicalConfiguration buildConfiguration) {
-        return new AllureSettings(
+    public AllureSpecs toSpecsEntity(@NotNull HierarchicalConfiguration buildConfiguration) {
+        return new AllureSpecs(
                 buildConfiguration.getBoolean(ALLURE_CONFIG_ENABLED),
                 buildConfiguration.getBoolean(ALLURE_CONFIG_FAILED_ONLY),
                 buildConfiguration.getString(ALLURE_CONFIG_EXECUTABLE),
@@ -115,7 +115,7 @@ public class AllureBuildConfigurator extends BaseConfigurablePlugin
     }
 
     @Override
-    public void addToBuildConfiguration(@NotNull AllureSettingsProperties specProperties,
+    public void addToBuildConfiguration(@NotNull AllureSpecsProperties specProperties,
                                         @NotNull HierarchicalConfiguration buildConfiguration) {
         specProperties.validate();
         buildConfiguration.setProperty(ALLURE_CONFIG_ENABLED, specProperties.getEnabled());
@@ -126,44 +126,44 @@ public class AllureBuildConfigurator extends BaseConfigurablePlugin
 
     @Nullable
     @Override
-    public AllureSettings fromYaml(Node node) throws PropertiesValidationException {
+    public AllureSpecs fromYaml(Node node) throws PropertiesValidationException {
         if (node instanceof MapNode) {
             MapNode mapNode = (MapNode) node;
             final Optional<MapNode> allureOptional = mapNode.getOptionalMap(YamlTags.YAML_ALLURE_ROOT);
             if (allureOptional.isPresent()) {
-                AllureSettings allureSettings = new AllureSettings();
+                AllureSpecs allureSpecs = new AllureSpecs();
                 MapNode allureNode = allureOptional.get();
 
                 Optional<StringNode> enabledOptional = allureNode.getOptionalString(YamlTags.YAML_ENABLED);
                 if (enabledOptional.isPresent() && StringUtils.isNotBlank(enabledOptional.get().get())) {
-                    allureSettings.enabled(Boolean.parseBoolean(enabledOptional.get().get()));
+                    allureSpecs.enabled(Boolean.parseBoolean(enabledOptional.get().get()));
                 } else {
                     ofNullable(settingsManager)
                             .map(AllureSettingsManager::getSettings)
-                            .ifPresent(settings -> allureSettings.enabled(settings.isEnabledByDefault()));
+                            .ifPresent(settings -> allureSpecs.enabled(settings.isEnabledByDefault()));
                 }
                 Optional<StringNode> failedOnlyOptional = allureNode.getOptionalString(YamlTags.YAML_FAILED_ONLY);
                 if (failedOnlyOptional.isPresent() && StringUtils.isNotBlank(failedOnlyOptional.get().get())) {
-                    allureSettings.failedOnly(Boolean.parseBoolean(failedOnlyOptional.get().get()));
+                    allureSpecs.failedOnly(Boolean.parseBoolean(failedOnlyOptional.get().get()));
                 } else {
-                    allureSettings.failedOnly(TRUE);
+                    allureSpecs.failedOnly(TRUE);
                 }
                 Optional<StringNode> executableOptional = allureNode.getOptionalString(YamlTags.YAML_EXECUTABLE);
                 if (executableOptional.isPresent() && StringUtils.isNotBlank(executableOptional.get().get())) {
-                    allureSettings.executable(executableOptional.get().get());
+                    allureSpecs.executable(executableOptional.get().get());
                 } else {
                     ofNullable(executablesManager)
                             .flatMap(BambooExecutablesManager::getDefaultAllureExecutable)
-                            .ifPresent(allureSettings::executable);
+                            .ifPresent(allureSpecs::executable);
                 }
                 Optional<StringNode> artifactNameOptional = allureNode.getOptionalString(YamlTags.YAML_ARTIFACT_NAME);
                 if (artifactNameOptional.isPresent() && StringUtils.isNotBlank(artifactNameOptional.get().get())) {
-                    allureSettings.artifactName(artifactNameOptional.get().get());
+                    allureSpecs.artifactName(artifactNameOptional.get().get());
                 } else {
-                    allureSettings.artifactName("");
+                    allureSpecs.artifactName("");
                 }
 
-                return allureSettings;
+                return allureSpecs;
             }
         }
         return null;
@@ -171,7 +171,7 @@ public class AllureBuildConfigurator extends BaseConfigurablePlugin
 
     @Nullable
     @Override
-    public Node toYaml(@NotNull AllureSettingsProperties specsProperties) {
+    public Node toYaml(@NotNull AllureSpecsProperties specsProperties) {
         final Map<String, Object> allure = new HashMap<>();
         allure.put(YamlTags.YAML_ENABLED, specsProperties.getEnabled());
         allure.put(YamlTags.YAML_FAILED_ONLY, specsProperties.getFailedOnly());
