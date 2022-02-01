@@ -9,7 +9,6 @@ import com.atlassian.bamboo.specs.api.builders.allure.AllureSettings;
 
 import javax.annotation.concurrent.Immutable;
 import java.util.Objects;
-import java.util.Set;
 
 @Immutable
 @Builder(AllureSettings.class)
@@ -20,14 +19,16 @@ public class AllureSettingsProperties implements PluginConfigurationProperties {
     private Boolean enabled;
     private Boolean failedOnly;
     private String executable;
+    private String artifactName;
 
     private AllureSettingsProperties() {
     }
 
-    public AllureSettingsProperties(Boolean enabled, Boolean failedOnly, String executable) {
+    public AllureSettingsProperties(Boolean enabled, Boolean failedOnly, String executable, String artifactName) {
         this.enabled = enabled;
         this.failedOnly = failedOnly;
         this.executable = executable;
+        this.artifactName = artifactName;
         validate();
     }
 
@@ -55,6 +56,14 @@ public class AllureSettingsProperties implements PluginConfigurationProperties {
         this.executable = executable;
     }
 
+    public String getArtifactName() {
+        return artifactName;
+    }
+
+    public void setArtifactName(String artifactName) {
+        this.artifactName = artifactName;
+    }
+
     @Override
     public AtlassianModuleProperties getAtlassianPlugin() {
         return new AtlassianModuleProperties("io.qameta.allure.allure-bamboo:allureConfig");
@@ -63,8 +72,9 @@ public class AllureSettingsProperties implements PluginConfigurationProperties {
     @Override
     public void validate() {
         ImporterUtils.checkNotNull(VALIDATION_CONTEXT, "enabled", this.enabled);
-        ImporterUtils.checkNotNull(VALIDATION_CONTEXT, "failedOnly", this.enabled);
-        ImporterUtils.checkNotNull(VALIDATION_CONTEXT, "executable", this.enabled);
+        ImporterUtils.checkNotNull(VALIDATION_CONTEXT, "failedOnly", this.failedOnly);
+        ImporterUtils.checkNotBlank(VALIDATION_CONTEXT, "executable", this.executable);
+        ImporterUtils.checkNotNull(VALIDATION_CONTEXT, "artifactName", this.artifactName);
     }
 
     @Override
@@ -72,12 +82,11 @@ public class AllureSettingsProperties implements PluginConfigurationProperties {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AllureSettingsProperties that = (AllureSettingsProperties) o;
-        return Objects.equals(enabled, that.enabled) && Objects.equals(failedOnly, that.failedOnly) && Objects.equals(executable, that.executable);
+        return Objects.equals(enabled, that.enabled) && Objects.equals(failedOnly, that.failedOnly) && Objects.equals(executable, that.executable) && Objects.equals(artifactName, that.artifactName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(enabled, failedOnly, executable);
+        return Objects.hash(enabled, failedOnly, executable, artifactName);
     }
-
 }

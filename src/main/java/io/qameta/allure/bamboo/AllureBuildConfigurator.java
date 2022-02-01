@@ -5,8 +5,6 @@ import com.atlassian.bamboo.plan.configuration.MiscellaneousPlanConfigurationPlu
 import com.atlassian.bamboo.specs.api.builders.allure.AllureSettings;
 import com.atlassian.bamboo.specs.api.exceptions.PropertiesValidationException;
 import com.atlassian.bamboo.specs.api.model.allure.AllureSettingsProperties;
-import com.atlassian.bamboo.specs.api.validators.common.ValidationContext;
-import com.atlassian.bamboo.specs.yaml.BambooYamlParserUtils;
 import com.atlassian.bamboo.specs.yaml.MapNode;
 import com.atlassian.bamboo.specs.yaml.Node;
 import com.atlassian.bamboo.specs.yaml.StringNode;
@@ -23,13 +21,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 import static com.atlassian.bamboo.plan.PlanClassHelper.isChain;
+import static io.qameta.allure.bamboo.AllureConstants.ALLURE_CONFIG_ARTIFACT_NAME;
 import static io.qameta.allure.bamboo.AllureConstants.ALLURE_CONFIG_ENABLED;
 import static io.qameta.allure.bamboo.AllureConstants.ALLURE_CONFIG_EXECUTABLE;
 import static io.qameta.allure.bamboo.AllureConstants.ALLURE_CONFIG_FAILED_ONLY;
@@ -88,6 +85,9 @@ public class AllureBuildConfigurator extends BaseConfigurablePlugin
                     .flatMap(BambooExecutablesManager::getDefaultAllureExecutable)
                     .ifPresent(executable -> buildConfiguration.setProperty(ALLURE_CONFIG_EXECUTABLE, executable));
         }
+        if (buildConfiguration.getProperty(ALLURE_CONFIG_ARTIFACT_NAME) == null) {
+            buildConfiguration.setProperty(ALLURE_CONFIG_ARTIFACT_NAME, "");
+        }
     }
 
     @NotNull
@@ -96,7 +96,8 @@ public class AllureBuildConfigurator extends BaseConfigurablePlugin
         return Sets.newHashSet(
                 ALLURE_CONFIG_ENABLED,
                 ALLURE_CONFIG_FAILED_ONLY,
-                ALLURE_CONFIG_EXECUTABLE
+                ALLURE_CONFIG_EXECUTABLE,
+                ALLURE_CONFIG_ARTIFACT_NAME
         );
     }
 
@@ -106,7 +107,8 @@ public class AllureBuildConfigurator extends BaseConfigurablePlugin
         return new AllureSettings(
                 buildConfiguration.getBoolean(ALLURE_CONFIG_ENABLED),
                 buildConfiguration.getBoolean(ALLURE_CONFIG_FAILED_ONLY),
-                buildConfiguration.getString(ALLURE_CONFIG_EXECUTABLE)
+                buildConfiguration.getString(ALLURE_CONFIG_EXECUTABLE),
+                buildConfiguration.getString(ALLURE_CONFIG_ARTIFACT_NAME)
         );
     }
 
@@ -116,6 +118,7 @@ public class AllureBuildConfigurator extends BaseConfigurablePlugin
         specProperties.validate();
         buildConfiguration.setProperty(ALLURE_CONFIG_ENABLED, specProperties.getEnabled());
         buildConfiguration.setProperty(ALLURE_CONFIG_FAILED_ONLY, specProperties.getFailedOnly());
+        buildConfiguration.setProperty(ALLURE_CONFIG_ARTIFACT_NAME, specProperties.getArtifactName());
 
         List<String> allureExecutables = ofNullable(executablesManager)
                 .map(BambooExecutablesManager::getAllureExecutables)
@@ -151,12 +154,16 @@ public class AllureBuildConfigurator extends BaseConfigurablePlugin
                 if (executableOptional.isPresent() && StringUtils.isNotBlank(executableOptional.get().get())) {
                     allureSettings.executable(executableOptional.get().get());
                 }
+                Optional<StringNode> artifactNameOptional = allureNode.getOptionalString(YamlTags.YAML_ARTIFACT_NAME);
+                artifactNameOptional.ifPresent(stringNode -> allureSettings.executable(stringNode.get()));
+
                 return allureSettings;
             }
         }
         return null;
     }
 
+    /* `toYaml` export method added with Bamboo 7.x release
     @Nullable
     @Override
     public Node toYaml(@NotNull AllureSettingsProperties specsProperties) {
@@ -164,12 +171,14 @@ public class AllureBuildConfigurator extends BaseConfigurablePlugin
         allure.put(YamlTags.YAML_ENABLED, specsProperties.getEnabled());
         allure.put(YamlTags.YAML_FAILED_ONLY, specsProperties.getFailedOnly());
         allure.put(YamlTags.YAML_EXECUTABLE, specsProperties.getExecutable());
+        allure.put(YamlTags.YAML_ARTIFACT_NAME, specsProperties.getArtifactName());
 
         final Map<String, Map<String, Object>> result = new HashMap<>();
         result.put(YamlTags.YAML_ALLURE_ROOT, allure);
 
         return BambooYamlParserUtils.asNode(result, ValidationContext.of(YamlTags.YAML_ALLURE_ROOT));
     }
+     */
 
     private static class YamlTags {
         static String YAML_ALLURE_ROOT = "allure";
