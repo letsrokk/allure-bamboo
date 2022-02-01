@@ -25,10 +25,10 @@ import com.atlassian.bamboo.plan.PlanResultKey;
 import com.atlassian.bamboo.plan.artifact.ArtifactDefinitionContextImpl;
 import com.atlassian.bamboo.plan.cache.ImmutableChain;
 import com.atlassian.bamboo.plugin.BambooPluginUtils;
+import com.atlassian.bamboo.plugin.descriptor.predicate.ConjunctionModuleDescriptorPredicate;
 import com.atlassian.bamboo.resultsummary.BuildResultsSummary;
 import com.atlassian.bamboo.resultsummary.ResultsSummaryManager;
 import com.atlassian.bamboo.security.SecureToken;
-import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.predicate.EnabledModulePredicate;
 import com.atlassian.plugin.predicate.ModuleOfClassPredicate;
@@ -359,8 +359,11 @@ public class AllureArtifactsManager {
     }
 
     private List<ArtifactHandler> getArtifactHandlers() {
-        final Predicate<ModuleDescriptor<ArtifactHandler>> predicate =
-                new ModuleOfClassPredicate<>(ArtifactHandler.class).and(new EnabledModulePredicate());
+        final ConjunctionModuleDescriptorPredicate<ArtifactHandler> predicate = new ConjunctionModuleDescriptorPredicate<>();
+
+        predicate.append(new ModuleOfClassPredicate<>(ArtifactHandler.class));
+        predicate.append(new EnabledModulePredicate<>());
+
         return ImmutableList.copyOf(pluginAccessor.getModules(predicate));
     }
 
@@ -371,12 +374,14 @@ public class AllureArtifactsManager {
 
     @SuppressWarnings("unchecked")
     private <T extends ArtifactHandler> Optional<T> getArtifactHandlerByClassName(String className) {
+        final ConjunctionModuleDescriptorPredicate<T> predicate = new ConjunctionModuleDescriptorPredicate<>();
         return ofNullable(className).map(clazz -> {
             final Class<T> aClass;
             try {
                 aClass = (Class<T>) Class.forName(clazz);
-                Predicate<ModuleDescriptor<T>> predicate =
-                        new ModuleOfClassPredicate<>(aClass).and(new EnabledModulePredicate());
+                predicate.append(new ModuleOfClassPredicate<>(aClass));
+                predicate.append(new EnabledModulePredicate<>());
+
                 return pluginAccessor.getModules(predicate).stream().findAny().orElse(null);
             } catch (ClassNotFoundException e) {
                 LOGGER.error("Failed to find artifact handler for class name " + className, e);

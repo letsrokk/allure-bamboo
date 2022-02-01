@@ -14,17 +14,20 @@ public class AllureSettings extends PluginConfiguration<AllureSettingsProperties
     private Boolean enabled;
     private Boolean failedOnly;
     private String executable;
+    private String artifactName;
 
     public AllureSettings() {
         this.enabled = FALSE;
         this.failedOnly = TRUE;
         this.executable = "allure-2.7.0";
+        this.artifactName = "";
     }
 
-    public AllureSettings(Boolean enabled, Boolean failedOnly, String executable) {
+    public AllureSettings(Boolean enabled, Boolean failedOnly, String executable, String artifactName) {
         this.enabled = enabled;
         this.failedOnly = failedOnly;
         this.executable = executable;
+        this.artifactName = artifactName;
     }
 
     public void enabled(Boolean enabled) {
@@ -39,9 +42,13 @@ public class AllureSettings extends PluginConfiguration<AllureSettingsProperties
         this.executable = executable;
     }
 
+    public void artifactName(String artifactName) {
+        this.artifactName = artifactName;
+    }
+
     @Override
     protected @NotNull AllureSettingsProperties build() {
-        return new AllureSettingsProperties(this.enabled, this.failedOnly, this.executable);
+        return new AllureSettingsProperties(this.enabled, this.failedOnly, this.executable, this.artifactName);
     }
 
     @Override
@@ -49,11 +56,11 @@ public class AllureSettings extends PluginConfiguration<AllureSettingsProperties
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AllureSettings that = (AllureSettings) o;
-        return Objects.equals(executable, that.executable);
+        return Objects.equals(enabled, that.enabled) && Objects.equals(failedOnly, that.failedOnly) && Objects.equals(executable, that.executable) && Objects.equals(artifactName, that.artifactName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(executable);
+        return Objects.hash(enabled, failedOnly, executable, artifactName);
     }
 }
