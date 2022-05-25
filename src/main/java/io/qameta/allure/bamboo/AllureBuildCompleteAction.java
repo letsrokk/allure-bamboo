@@ -162,7 +162,8 @@ public class AllureBuildCompleteAction extends BaseConfigurablePlugin implements
             HttpURLConnection.setFollowRedirects(false);
             HttpURLConnection con = (HttpURLConnection) new URL(artifactUrl).openConnection();
             con.setRequestMethod("HEAD");
-            return con.getResponseCode() == HttpURLConnection.HTTP_OK;
+            return con.getResponseCode() == HttpURLConnection.HTTP_OK
+                    && con.getContentType().startsWith("application/json");
         } catch (Exception e) {
             LOGGER.info("Cannot connect to artifact {}.", artifactUrl, e);
             return false;
