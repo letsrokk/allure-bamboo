@@ -15,6 +15,7 @@
  */
 package io.qameta.allure.bamboo;
 
+import com.atlassian.bamboo.archive.ArchiverType;
 import com.atlassian.bamboo.artifact.MutableArtifact;
 import com.atlassian.bamboo.artifact.MutableArtifactImpl;
 import com.atlassian.bamboo.build.BuildDefinition;
@@ -50,6 +51,7 @@ import com.atlassian.plugin.predicate.ModuleOfClassPredicate;
 import com.atlassian.sal.api.ApplicationProperties;
 import com.atlassian.sal.api.UrlMode;
 import com.google.common.collect.ImmutableList;
+import io.qameta.allure.bamboo.util.ZipUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tools.ant.types.FileSet;
 import org.jetbrains.annotations.NotNull;
@@ -62,6 +64,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -233,6 +236,9 @@ public class AllureArtifactsManager {
                         } else {
                             downloadAllArtifactsTo(dataProvider, stageDir, "");
                         }
+                        if (artifact.getArchiverType() == ArchiverType.ZIP) {
+                            unzipArtifact(artifact, stageDir);
+                        }
                     }
                 }
             }
@@ -280,6 +286,47 @@ public class AllureArtifactsManager {
                 }
             } catch (IOException e) {
                 logAndThrow(e, FAILED_TO_DOWNLOAD_ARTIFACTS_TO + tempDir);
+            }
+        }
+    }
+
+    /**
+     * Unpack results packaged into ZIP artifact.
+     *
+     * @param artifact artifact
+     * @param stageDir output directory
+     */
+    private void unzipArtifact(final MutableArtifact artifact, final File stageDir) {
+        Arrays.stream(requireNonNull(stageDir.listFiles()))
+                .filter(artifactFile ->
+                        artifactFile.getName().equals(String.format("%s.zip", artifact.getLabel())))
+                .findFirst()
+                .ifPresent(zipFile -> unzipResultsArtifact(zipFile, stageDir));
+    }
+
+    private void unzipResultsArtifact(final File artifactZip, final File targetDir) {
+        try {
+            ZipUtil.unzip(artifactZip.toPath(), targetDir.getPath());
+            Arrays.stream(requireNonNull(targetDir.listFiles()))
+                    .forEach(resultFileOrDirectory -> relocateUnzippedResults(resultFileOrDirectory, targetDir));
+        } catch (IOException e) {
+            LOGGER.error("Unable to unpack artifact {}: {}", artifactZip.getName(), e.getMessage());
+        } finally {
+            deleteQuietly(artifactZip);
+        }
+    }
+
+    private void relocateUnzippedResults(final File resultFileOrDirectory, final File targetDir) {
+        if (resultFileOrDirectory.isDirectory()) {
+            Arrays.stream(requireNonNull(resultFileOrDirectory.listFiles()))
+                    .forEach(listedFileOrDirectory -> relocateUnzippedResults(listedFileOrDirectory, targetDir));
+        } else {
+            final Path target = Paths.get(targetDir.getPath(), resultFileOrDirectory.getName());
+            try {
+                Files.move(resultFileOrDirectory.toPath(), target);
+            } catch (IOException e) {
+                LOGGER.error("Unable to relocate file {} to {}: {}",
+                        resultFileOrDirectory.toPath(), target, e.getMessage());
             }
         }
     }

@@ -17,7 +17,6 @@ package io.qameta.allure.bamboo;
 
 import io.qameta.allure.bamboo.util.Downloader;
 import io.qameta.allure.bamboo.util.ZipUtil;
-import org.apache.commons.compress.archivers.ArchiveException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +58,7 @@ class AllureDownloader {
                 }
                 moveDirectory(extractDir.resolve(extractedDirName).toFile(), homeDir);
                 return Paths.get(allureHomeDir);
-            } catch (ArchiveException | IOException e) {
+            } catch (IOException e) {
                 LOGGER.error("Failed to download and extract Allure of version {} to dir {}",
                         version, allureHomeDir, e);
                 return null;
