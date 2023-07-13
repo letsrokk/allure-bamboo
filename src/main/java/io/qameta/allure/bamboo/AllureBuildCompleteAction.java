@@ -156,7 +156,7 @@ public class AllureBuildCompleteAction extends BaseConfigurablePlugin implements
             allureBuildResult(false, stackTraceToString(e)).dumpToCustomData(customBuildData);
         } finally {
             deleteQuietly(artifactsTempDir);
-            deleteQuietly(allureReportDir);
+            deleteQuietly(allureReportDir.getParentFile());
         }
     }
 
