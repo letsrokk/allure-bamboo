@@ -17,6 +17,7 @@ package io.qameta.allure.bamboo.util;
 
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
+import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,5 +58,6 @@ public final class ZipUtil {
             }
         }
         move(zipReport, targetDir, StandardCopyOption.REPLACE_EXISTING);
+        FileUtils.deleteQuietly(zipReportTmpDir.toFile());
     }
 }
