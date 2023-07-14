@@ -241,17 +241,21 @@ public class AllureBuildCompleteAction extends BaseConfigurablePlugin implements
                                           final int buildId) {
         final String artifactUrl = getHistoryArtifactUrl(HISTORY_JSON, planKey, buildId);
         final ObjectMapper mapper = new JsonMapper();
-        final File tmpHistoryDirectory = createTempDir();
         try {
-            final Path historyTmpFile = createTempFile(tmpHistoryDirectory.toPath(), HISTORY, ".json");
-            Downloader.download(new URL(artifactUrl), historyTmpFile);
-            mapper.readValue(historyTmpFile.toFile(), Object.class);
-            return true;
-        } catch (Exception e) {
-            LOGGER.info("Cannot connect to artifact or the artifact is not valid {}.", artifactUrl, e);
+            final Path historyTmpFile = createTempFile(HISTORY, ".json");
+            try {
+                Downloader.download(new URL(artifactUrl), historyTmpFile);
+                mapper.readValue(historyTmpFile.toFile(), Object.class);
+                return true;
+            } catch (Exception e) {
+                LOGGER.info("Cannot connect to artifact or the artifact is not valid {}.", artifactUrl, e);
+                return false;
+            } finally {
+                deleteQuietly(historyTmpFile.toFile());
+            }
+        } catch (IOException e) {
+            LOGGER.info("Cannot create temporary history file", e);
             return false;
-        } finally {
-            deleteQuietly(tmpHistoryDirectory);
         }
     }
 
