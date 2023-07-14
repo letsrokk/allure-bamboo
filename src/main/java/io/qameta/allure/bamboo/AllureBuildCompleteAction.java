@@ -113,7 +113,6 @@ public class AllureBuildCompleteAction extends BaseConfigurablePlugin implements
         final File allureReportDir = new File(createTempDir(), "report");
         final Map<String, String> customBuildData = chainResultsSummary.getCustomBuildData();
         try {
-
             final String executable = Optional.ofNullable(buildConfig.getExecutable())
                     .orElse(executablesManager.getDefaultAllureExecutable()
                             .orElseThrow(() -> new RuntimeException("Could not find default Allure executable!"
@@ -242,14 +241,17 @@ public class AllureBuildCompleteAction extends BaseConfigurablePlugin implements
                                           final int buildId) {
         final String artifactUrl = getHistoryArtifactUrl(HISTORY_JSON, planKey, buildId);
         final ObjectMapper mapper = new JsonMapper();
+        final File tmpHistoryDirectory = createTempDir();
         try {
-            final Path historyTmpFile = createTempFile(HISTORY, ".json");
+            final Path historyTmpFile = createTempFile(tmpHistoryDirectory.toPath(), HISTORY, ".json");
             Downloader.download(new URL(artifactUrl), historyTmpFile);
             mapper.readValue(historyTmpFile.toFile(), Object.class);
             return true;
         } catch (Exception e) {
             LOGGER.info("Cannot connect to artifact or the artifact is not valid {}.", artifactUrl, e);
             return false;
+        } finally {
+            deleteQuietly(tmpHistoryDirectory);
         }
     }
 
