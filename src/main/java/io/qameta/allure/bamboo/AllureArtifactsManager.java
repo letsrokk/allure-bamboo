@@ -76,6 +76,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collector;
 
 import static com.atlassian.bamboo.build.artifact.AbstractArtifactHandler.configProvider;
@@ -208,12 +209,12 @@ public class AllureArtifactsManager {
      *
      * @param chainResultsSummary chain results
      * @param baseDir             temporary directory
-     * @param artifactName        name of the artifact to use (all artifacts will be used if null)
+     * @param artifactNamePattern name pattern of the artifact to use (all artifacts will be used if null)
      */
     @SuppressWarnings("PMD.CognitiveComplexity")
     Collection<Path> downloadAllArtifactsTo(final @NotNull ChainResultsSummary chainResultsSummary,
                                             final File baseDir,
-                                            final @Nullable String artifactName) throws IOException {
+                                            final @Nullable String artifactNamePattern) throws IOException {
         final List<Path> resultsPaths = new ArrayList<>();
         for (ChainStageResult stageResult : chainResultsSummary.getStageResults()) {
             for (BuildResultsSummary resultsSummary : stageResult.getBuildResults()) {
@@ -222,10 +223,13 @@ public class AllureArtifactsManager {
                         chainResultsSummary.getPlanKey(), chainResultsSummary.getBuildNumber());
                 for (ArtifactLink link : resultsSummary.getProducedArtifactLinks()) {
                     final MutableArtifact artifact = link.getArtifact();
-                    if (isEmpty(artifactName) || artifactName.equals(artifact.getLabel())) {
-                        LOGGER.info("artifact {} matches the configured artifact name {} for the build {}-{}",
-                                artifact.getLabel(), artifactName,
-                                chainResultsSummary.getPlanKey(), chainResultsSummary.getBuildNumber());
+                    if (isEmpty(artifactNamePattern)
+                            || Pattern.matches(artifactNamePattern, artifact.getLabel())) {
+                        LOGGER.info("artifact {} matches the configured artifact name pattern {} for the build {}-{}",
+                                artifact.getLabel(),
+                                artifactNamePattern,
+                                chainResultsSummary.getPlanKey(),
+                                chainResultsSummary.getBuildNumber());
                         final File stageDir = new File(baseDir, UUID.randomUUID().toString());
                         forceMkdir(stageDir);
                         resultsPaths.add(stageDir.toPath());

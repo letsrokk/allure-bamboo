@@ -35,7 +35,7 @@ public final class AllureBuildConfig implements Serializable {
     private final boolean onlyForFailed;
     private final String executable;
     private final boolean enabled;
-    private final String artifactName;
+    private final String artifactNamePattern;
     private final String logoUrl;
     private static final String DEFAULT_ARTIFACT_NAME = "allure-results";
     public static final String DEFAULT_CUSTOM_LOGO_URL = "https://qameta.io/allure-report/img/reportlogo.svg";
@@ -43,12 +43,12 @@ public final class AllureBuildConfig implements Serializable {
     private AllureBuildConfig(final String executable,
                               final String enabled,
                               final String onlyForFailed,
-                              final String artifactName,
+                              final String artifactNamePattern,
                               final String logoUrl) {
         this.onlyForFailed = StringUtils.isEmpty(onlyForFailed) ? TRUE : Boolean.parseBoolean(onlyForFailed);
         this.enabled = StringUtils.isEmpty(enabled) ? FALSE : Boolean.parseBoolean(enabled);
         this.executable = executable;
-        this.artifactName = artifactName;
+        this.artifactNamePattern = artifactNamePattern;
         // If the URL is not a valid URL it will be omitted
         final UrlValidator urlValidator = new UrlValidator();
         this.logoUrl = urlValidator.isValid(logoUrl) ? logoUrl : AllureBuildConfig.DEFAULT_CUSTOM_LOGO_URL;
@@ -88,8 +88,8 @@ public final class AllureBuildConfig implements Serializable {
         return enabled;
     }
 
-    public String getArtifactName() {
-        return artifactName;
+    public String getArtifactNamePattern() {
+        return artifactNamePattern;
     }
 
     public String getCustomLogoUrl() {

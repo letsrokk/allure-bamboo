@@ -126,7 +126,7 @@ public class AllureBuildCompleteAction extends BaseConfigurablePlugin implements
 
             LOGGER.info("Starting artifacts downloading into {} for {}", artifactsTempDir.getPath(), chain.getName());
             final Collection<Path> artifactsPaths = artifactsManager.downloadAllArtifactsTo(
-                    chainResultsSummary, artifactsTempDir, buildConfig.getArtifactName());
+                    chainResultsSummary, artifactsTempDir, buildConfig.getArtifactNamePattern());
             if (artifactsTempDir.list().length == 0) {
                 allureBuildResult(false, "Build result does not have any uploaded artifacts!")
                         .dumpToCustomData(customBuildData);

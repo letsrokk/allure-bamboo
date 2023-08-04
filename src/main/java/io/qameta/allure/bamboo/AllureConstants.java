@@ -46,7 +46,7 @@ final class AllureConstants {
     static final String ALLURE_BUILD_REPORT_FAILURE_DETAILS = "custom.allure.build.report.output";
     static final String ALLURE_CONFIG_ENABLED = "custom.allure.config.enabled";
     static final String ALLURE_CONFIG_FAILED_ONLY = "custom.allure.config.failed.only";
-    static final String ALLURE_CONFIG_ARTIFACT_NAME = "custom.allure.artifact.name";
+    static final String ALLURE_CONFIG_ARTIFACT_NAME = "custom.allure.config.artifact.name";
     static final String ALLURE_CONFIG_STORAGE_TYPE = "custom.allure.config.storage.type";
     static final String ALLURE_CONFIG_DOWNLOAD_ENABLED = "custom.allure.config.download.enabled";
     static final String ALLURE_CONFIG_ENABLED_BY_DEFAULT = "custom.allure.config.enabled.default";
