@@ -7,7 +7,7 @@
     list=uiConfigBean.getExecutableLabels('allure') dependsOn='custom.allure.config.enabled' showOn='true'
     extraUtility=addExecutableLink /]
 
-    [@ww.textfield labelKey="custom.allure.artifact.name.label" name="custom.allure.artifact.name" required="false"/]
+    [@ww.textfield labelKey="custom.allure.config.artifact.name.label" name="custom.allure.config.artifact.name" required="false"/]
 
     [@ww.textfield labelKey="custom.allure.logo.url.label" name="custom.allure.logo.url" required="false"/]
 
