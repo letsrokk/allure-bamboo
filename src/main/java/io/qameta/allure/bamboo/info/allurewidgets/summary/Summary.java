@@ -1,5 +1,5 @@
 /*
- *  Copyright 2016-2023 Qameta Software OÜ
+ *  Copyright 2016-2024 Qameta Software Inc
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -45,10 +45,10 @@ public class Summary extends AbstractSummary {
     }
 
     /**
-     * @param statistic statistic
+     * @param statistic  statistic
      * @param reportName report name
-     * @param time time
-     * @param testRuns test runs
+     * @param time       time
+     * @param testRuns   test runs
      */
     public Summary(final String reportName,
                    final List<Object> testRuns,

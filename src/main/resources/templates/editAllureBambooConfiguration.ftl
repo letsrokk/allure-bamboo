@@ -9,6 +9,6 @@
 
     [@ww.textfield labelKey="custom.allure.config.artifact.name.label" name="custom.allure.config.artifact.name" required="false"/]
 
-    [@ww.textfield labelKey="custom.allure.logo.url.label" name="custom.allure.logo.url" required="false"/]
+    [@ww.textarea labelKey="custom.allure.logo.url.label" name="custom.allure.logo.url" required="false"/]
 
 [/@ui.bambooSection]

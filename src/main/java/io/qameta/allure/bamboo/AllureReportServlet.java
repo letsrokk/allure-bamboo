@@ -1,5 +1,5 @@
 /*
- *  Copyright 2016-2023 Qameta Software OÜ
+ *  Copyright 2016-2024 Qameta Software Inc
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import com.atlassian.bamboo.plan.PlanResultKey;
 import com.atlassian.bamboo.resultsummary.ResultsSummary;
 import com.atlassian.bamboo.resultsummary.ResultsSummaryManager;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +42,6 @@ import java.util.stream.Stream;
 import static com.atlassian.bamboo.plan.PlanKeys.getPlanResultKey;
 import static io.qameta.allure.bamboo.AllureBuildResult.fromCustomData;
 import static java.lang.Integer.parseInt;
-import static org.sonatype.aether.util.StringUtils.isEmpty;
 
 public class AllureReportServlet extends HttpServlet {
 
@@ -100,7 +100,7 @@ public class AllureReportServlet extends HttpServlet {
             final URI file = new URL(fileUrl).toURI();
             final String mimeType = Optional.ofNullable(getServletContext().getMimeType(fileUrl))
                     .orElse(Files.probeContentType(Paths.get(file.getPath()))
-            );
+                    );
             final String charsetPostfix = Stream.of("application", "text")
                     .anyMatch(mimeType::contains) ? ";charset=utf-8" : "";
             response.setHeader(CONTENT_TYPE, mimeType + charsetPostfix);
@@ -149,10 +149,10 @@ public class AllureReportServlet extends HttpServlet {
 
     private void uploadResultWasNotSuccess(final HttpServletResponse response,
                                            final AllureBuildResult uploadResult) {
-        final String errorMessage = isEmpty(uploadResult.getFailureDetails())
+        final String errorMessage = StringUtils.isEmpty(uploadResult.getFailureDetails())
                 ? "Unknown error has occurred during Allure Build. Please refer the server logs for details."
                 : "Something went wrong with Allure Report generation. Here are some details: \n"
-                        + uploadResult.getFailureDetails();
+                + uploadResult.getFailureDetails();
         try {
             response.setHeader(CONTENT_TYPE, "text/plain");
             response.setHeader("Content-Length", String.valueOf(errorMessage.length()));

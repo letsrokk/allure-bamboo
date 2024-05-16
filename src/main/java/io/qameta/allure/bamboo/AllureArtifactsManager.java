@@ -1,5 +1,5 @@
 /*
- *  Copyright 2016-2023 Qameta Software OÜ
+ *  Copyright 2016-2024 Qameta Software Inc
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -151,7 +151,7 @@ public class AllureArtifactsManager {
                 .flatMap(rs -> getArtifactHandlerByClassName(
                         fromCustomData(rs.getCustomBuildData()).getArtifactHandlerClass())
                         .map(handler -> getArtifactUrl(planKeyString, buildNumber,
-                                                filePath, artifactConfig, planResultKey, handler)
+                                filePath, artifactConfig, planResultKey, handler)
                         )
                 );
     }
@@ -168,10 +168,10 @@ public class AllureArtifactsManager {
         final ArtifactDefinitionContextImpl artifactDef = getAllureArtifactDef();
 
         return Optional.ofNullable(
-                artifactHandler.getArtifactLinkDataProvider(
-                        mutableArtifact(planResultKey, artifactDef.getName()),
-                        configProvider(artifactConfig)
-                ))
+                        artifactHandler.getArtifactLinkDataProvider(
+                                mutableArtifact(planResultKey, artifactDef.getName()),
+                                configProvider(artifactConfig)
+                        ))
                 .map(lp -> getArtifactUrl(filePath, planResultKey, artifactDef, lp))
                 .orElse(null);
     }
@@ -377,19 +377,19 @@ public class AllureArtifactsManager {
                 final String errorMessage = "Unable to publish artifact via " + artifactHandler;
                 final ArtifactHandlerPublishingResult publishingResult = BambooPluginUtils.callUnsafeCode(
                         new BambooPluginUtils.NoThrowCallable<ArtifactHandlerPublishingResult>(errorMessage) {
-                    @NotNull
-                    @Override
-                    public ArtifactHandlerPublishingResult call() {
-                        try {
-                            return artifactHandler.publish(
-                                    summary.getPlanResultKey(), artifact, artifactPublishingConfig);
-                        } catch (final Exception e) {
-                            LOGGER.error("Failed to publish Allure Report using handler "
-                                    + artifactHandler.getClass().getName(), e);
-                            return ArtifactHandlerPublishingResultImpl.failure();
-                        }
-                    }
-                });
+                            @NotNull
+                            @Override
+                            public ArtifactHandlerPublishingResult call() {
+                                try {
+                                    return artifactHandler.publish(
+                                            summary.getPlanResultKey(), artifact, artifactPublishingConfig);
+                                } catch (final Exception e) {
+                                    LOGGER.error("Failed to publish Allure Report using handler "
+                                            + artifactHandler.getClass().getName(), e);
+                                    return ArtifactHandlerPublishingResultImpl.failure();
+                                }
+                            }
+                        });
                 if (publishingResult != null) {
                     publishingResult.setArtifactHandlerKey(artifactHandler.getModuleDescriptor().getCompleteKey());
                     return Optional.of(allureBuildResult(publishingResult.isSuccessful(), null)
@@ -502,17 +502,17 @@ public class AllureArtifactsManager {
         final AtomicReference<Predicate<ModuleDescriptor<T>>> predicate = new AtomicReference<>();
         return Optional.ofNullable(className)
                 .map(clazz -> {
-                        final Class<T> aClass;
-                        try {
-                            aClass = (Class<T>) Class.forName(clazz);
-                            predicate.set(new ModuleOfClassPredicate<>(aClass).and(new EnabledModulePredicate()));
+                            final Class<T> aClass;
+                            try {
+                                aClass = (Class<T>) Class.forName(clazz);
+                                predicate.set(new ModuleOfClassPredicate<>(aClass).and(new EnabledModulePredicate()));
 
-                            return pluginAccessor.getModules(predicate.get()).stream().findAny().orElse(null);
-                        } catch (ClassNotFoundException e) {
-                            LOGGER.error("Failed to find artifact handler for class name " + className, e);
+                                return pluginAccessor.getModules(predicate.get()).stream().findAny().orElse(null);
+                            } catch (ClassNotFoundException e) {
+                                LOGGER.error("Failed to find artifact handler for class name " + className, e);
+                            }
+                            return null;
                         }
-                        return null;
-                    }
                 );
     }
 }

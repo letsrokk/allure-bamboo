@@ -1,5 +1,5 @@
 /*
- *  Copyright 2016-2023 Qameta Software OÜ
+ *  Copyright 2016-2024 Qameta Software Inc
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -124,6 +124,9 @@ public class AllureBuildCompleteAction extends BaseConfigurablePlugin implements
             final AllureExecutable allure = allureExecutable.provide(globalConfig, executable)
                     .orElseThrow(() -> new RuntimeException("Failed to find Allure executable by name " + executable));
 
+            // Creating a copy for customize report
+            final AllureExecutable allureTmp = allure.getCopy();
+
             LOGGER.info("Starting artifacts downloading into {} for {}", artifactsTempDir.getPath(), chain.getName());
             final Collection<Path> artifactsPaths = artifactsManager.downloadAllArtifactsTo(
                     chainResultsSummary, artifactsTempDir, buildConfig.getArtifactNamePattern());
@@ -136,9 +139,9 @@ public class AllureBuildCompleteAction extends BaseConfigurablePlugin implements
 
                 // Setting the new logo in the allure libraries before generate the report.
                 if (globalConfig.isCustomLogoEnabled()) {
-                    allure.setCustomLogo(buildConfig.getCustomLogoUrl());
+                    allureTmp.setCustomLogo(buildConfig.getCustomLogoUrl());
                 }
-                allure.generate(artifactsPaths, allureReportDir.toPath());
+                allureTmp.generate(artifactsPaths, allureReportDir.toPath());
                 // Setting report name
                 this.finalizeReport(allureReportDir,
                         chainExecution.getPlanResultKey().getBuildNumber(), chain.getBuildName());

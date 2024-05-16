@@ -1,5 +1,5 @@
 /*
- *  Copyright 2016-2023 Qameta Software OÜ
+ *  Copyright 2016-2024 Qameta Software Inc
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import java.nio.file.Paths;
 
 import static com.google.common.io.Files.createTempDir;
 import static java.util.Collections.singleton;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.junit.MockitoJUnit.rule;
@@ -53,8 +52,6 @@ public class AllureExecutableTest {
         executable = new AllureExecutable(path, cmdLine);
         fromDir = createTempDir().toPath();
         toDir = createTempDir().toPath();
-        when(cmdLine.parseGenerateOutput(anyString()))
-                .thenReturn(new AllureGenerateResult("", true));
     }
 
     @Test

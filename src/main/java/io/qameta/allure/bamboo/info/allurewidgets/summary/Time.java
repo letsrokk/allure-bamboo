@@ -1,5 +1,5 @@
 /*
- *  Copyright 2016-2023 Qameta Software OÜ
+ *  Copyright 2016-2024 Qameta Software Inc
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -49,11 +49,11 @@ public class Time extends AbstractSummary {
     }
 
     /**
-     * @param duration duration
+     * @param duration    duration
      * @param sumDuration sum of duration
      * @param minDuration min duration
-     * @param stop stop time
-     * @param start start time
+     * @param stop        stop time
+     * @param start       start time
      * @param maxDuration max duration
      */
     public Time(final Long start,

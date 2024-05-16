@@ -1,5 +1,5 @@
 /*
- *  Copyright 2016-2023 Qameta Software OÜ
+ *  Copyright 2016-2024 Qameta Software Inc
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -41,16 +41,16 @@ public final class Downloader {
 
     public static Optional<Path> download(final URL url,
                                           final Path target) throws IOException {
-            final URLConnection connection = url.openConnection();
-            connection.setConnectTimeout(CONN_TIMEOUT_MS);
-            connection.setReadTimeout(DOWNLOAD_TIMEOUT_MS);
-            connection.setRequestProperty("Connection", "close");
-            connection.setRequestProperty("Pragma", "no-cache");
-            ((HttpURLConnection) connection).setInstanceFollowRedirects(true);
-            connection.connect();
-            try (InputStream input = connection.getInputStream()) {
-                Files.copy(input, target, StandardCopyOption.REPLACE_EXISTING);
-                return Optional.of(target);
-            }
+        final URLConnection connection = url.openConnection();
+        connection.setConnectTimeout(CONN_TIMEOUT_MS);
+        connection.setReadTimeout(DOWNLOAD_TIMEOUT_MS);
+        connection.setRequestProperty("Connection", "close");
+        connection.setRequestProperty("Pragma", "no-cache");
+        ((HttpURLConnection) connection).setInstanceFollowRedirects(true);
+        connection.connect();
+        try (InputStream input = connection.getInputStream()) {
+            Files.copy(input, target, StandardCopyOption.REPLACE_EXISTING);
+            return Optional.of(target);
+        }
     }
 }

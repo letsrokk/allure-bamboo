@@ -1,5 +1,5 @@
 /*
- *  Copyright 2016-2023 Qameta Software OÜ
+ *  Copyright 2016-2024 Qameta Software Inc
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -70,7 +70,7 @@ public class AllureExecutableProvider {
                     } else if (isDownloadEnabled) {
                         final Matcher nameMatcher = EXEC_NAME_PATTERN.matcher(executableName);
                         return allureDownloader.downloadAndExtractAllureTo(allureHomeSubDir,
-                                nameMatcher.matches() ? nameMatcher.group(1) : DEFAULT_VERSION)
+                                        nameMatcher.matches() ? nameMatcher.group(1) : DEFAULT_VERSION)
                                 .map(path -> executable).orElse(null);
                     }
                     return null;
